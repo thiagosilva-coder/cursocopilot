@@ -102,22 +102,22 @@ def signup_for_activity(activity_name: str, email: str):
     # Get the specific activity
     activity = activities[activity_name]
 
-  # Validate not already enrolled
-  if email in activity.get("participants", []):
-    raise HTTPException(status_code=400, detail="Student already enrolled in this activity")
+    # Validate not already enrolled
+    if email in activity.get("participants", []):
+        raise HTTPException(status_code=400, detail="Student already enrolled in this activity")
 
-  # Validate capacity
-  if len(activity.get("participants", [])) >= activity.get("max_participants", 0):
-    raise HTTPException(status_code=400, detail="Activity is full")
+    # Validate capacity
+    if len(activity.get("participants", [])) >= activity.get("max_participants", 0):
+        raise HTTPException(status_code=400, detail="Activity is full")
 
-  # Add student
-  activity.setdefault("participants", []).append(email)
+    # Add student
+    activity.setdefault("participants", []).append(email)
 
-  return {
-    "message": f"Signed up {email} for {activity_name}",
-    "participants": activity["participants"],
-    "max_participants": activity.get("max_participants", 0),
-  }
+    return {
+        "message": f"Signed up {email} for {activity_name}",
+        "participants": activity["participants"],
+        "max_participants": activity.get("max_participants", 0),
+    }
 
 
 # DELETE endpoint to remove participant
