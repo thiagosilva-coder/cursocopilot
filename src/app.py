@@ -5,7 +5,7 @@ A super simple FastAPI application that allows students to view and sign up
 for extracurricular activities at Mergington High School.
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 import os
@@ -102,9 +102,40 @@ def signup_for_activity(activity_name: str, email: str):
     # Get the specific activity
     activity = activities[activity_name]
 
-    Validar que o aluno ainda não está inscrito
-    
+  # Validate not already enrolled
+  if email in activity.get("participants", []):
+    raise HTTPException(status_code=400, detail="Student already enrolled in this activity")
 
-    # Add student
-    activity["participants"].append(email)
-    return {"message": f"Signed up {email} for {activity_name}"}
+  # Validate capacity
+  if len(activity.get("participants", [])) >= activity.get("max_participants", 0):
+    raise HTTPException(status_code=400, detail="Activity is full")
+
+  # Add student
+  activity.setdefault("participants", []).append(email)
+
+  return {
+    "message": f"Signed up {email} for {activity_name}",
+    "participants": activity["participants"],
+    "max_participants": activity.get("max_participants", 0),
+  }
+
+
+# DELETE endpoint to remove participant
+@app.delete("/activities/{activity_name}/participants")
+def remove_participant(activity_name: str, email: str = Query(...)):
+    """Remove a participant from an activity."""
+    if activity_name not in activities:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    activity = activities[activity_name]
+
+    if email not in activity.get("participants", []):
+        raise HTTPException(status_code=400, detail="Participant not enrolled in this activity")
+
+    activity["participants"].remove(email)
+
+    return {
+        "message": f"Removed {email} from {activity_name}",
+        "participants": activity["participants"],
+        "max_participants": activity.get("max_participants", 0),
+    }
